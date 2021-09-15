@@ -82,33 +82,23 @@ void display_1602_str(unsigned char row, unsigned char column, char str[]) {
     address = (row - 1) * 0x40 + (column - 1);
     // 设置起始地址
     write_cmd(0x80 + address);
-
-//    int i;
-//    i = 0;
-//    int n;
-//    n = 0;
     char *copyStr = str;
-//    int len = strlen(copyStr);
-//    if (len > MAX_COLUMN) {
-//        while (*copyStr) {
-//            write_dat(*copyStr++);
-//            ++i;
-//            if (i > MAX_COLUMN) {
-//                delay();
-//                ++n;
-//                i = 0;
-//                if (n < len) {
-//                    copyStr = str;
-//                    *copyStr += n;
-//                } else {
-//                    copyStr = str;
-//                }
-//            }
-//        }
-//    } else {
-//    }
+    int n = 0, i = 0;
+    int len = strlen(str);
     while (*copyStr) {
+        n++;
         write_dat(*copyStr++);
+        if (n % (MAX_COLUMN + 1) == 0) {
+            n = 0;
+            i++;
+            if ( i < len) {
+                copyStr = &str[i];
+            }
+            delay();
+        }
+        if (!*copyStr) {
+            copyStr = &str[0];
+        }
     }
 
 }
