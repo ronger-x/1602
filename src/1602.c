@@ -12,6 +12,12 @@ SBIT(E_1602, _P3, 4);
 #define MAX_ROW 2
 #define MAX_COLUMN 16
 
+void delay(unsigned int i) {
+    while (i) {
+        i--;
+    }
+}
+
 unsigned char read_state() {
     unsigned char state;
     RS_1602 = 0;
@@ -40,6 +46,7 @@ void write_cmd(unsigned char cmd) {
     P2 = cmd;
 
     E_1602 = 1;
+    delay(1000);
     E_1602 = 0;
 }
 
@@ -69,10 +76,11 @@ int strlen(char *str) {
     return n;
 }
 
-void delay() {
-    unsigned int i = 10000;
-    while (i) {
-        i--;
+void display_1602_block_str() {
+    char block[] = {"  "};
+    char *blockPointer = block;
+    while (*blockPointer) {
+        write_dat(*blockPointer++);
     }
 }
 
@@ -83,21 +91,31 @@ void display_1602_str(unsigned char row, unsigned char column, char str[]) {
     // 设置起始地址
     write_cmd(0x80 + address);
     char *copyStr = str;
-    int n = 0, i = 0;
     int len = strlen(str);
-    while (*copyStr) {
-        n++;
-        write_dat(*copyStr++);
-        if (n % (MAX_COLUMN + 1) == 0) {
-            n = 0;
-            i++;
-            if ( i < len) {
-                copyStr = &str[i];
-            }
-            delay();
+    if (len < 16) {
+        while (*copyStr) {
+            write_dat(*copyStr++);
         }
-        if (!*copyStr) {
-            copyStr = &str[0];
+    } else {
+        int n = 0, i = 0;
+        while (*copyStr) {
+            n++;
+            write_dat(*copyStr++);
+            if (n % 17 == 0) {
+                n = 0;
+                i++;
+                if (i < len) {
+                    copyStr = &str[i];
+                    write_cmd(0x80 + address);
+                } else {
+                    i = 0;
+                }
+            }
+            if (!*copyStr) {
+                display_1602_block_str();
+                copyStr = &str[0];
+            }
+            delay(3800);
         }
     }
 
